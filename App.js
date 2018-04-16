@@ -3,6 +3,9 @@ import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Slider, Vibration } from 'react-native';
 import GalleryScreen from './GalleryScreen';
 import isIPhoneX from 'react-native-is-iphonex';
+import {
+  Gyroscope,
+} from 'expo';
 
 const landmarkSize = 2;
 
@@ -37,6 +40,7 @@ export default class CameraScreen extends React.Component {
     photos: [],
     faces: [],
     permissionsGranted: false,
+    gyroscopeData: {},
   };
 
   async componentWillMount() {
@@ -95,12 +99,14 @@ export default class CameraScreen extends React.Component {
     this.setState({
       zoom: this.state.zoom - 0.1 < 0 ? 0 : this.state.zoom - 0.1,
     });
+    this._subscribe();
   }
 
   zoomIn() {
     this.setState({
       zoom: this.state.zoom + 0.1 > 1 ? 1 : this.state.zoom + 0.1,
     });
+    this._unsubscribe();
   }
 
   setFocusDepth(depth) {
@@ -127,6 +133,17 @@ export default class CameraScreen extends React.Component {
 
   onFacesDetected = ({ faces }) => this.setState({ faces });
   onFaceDetectionError = state => console.warn('Faces detection error:', state);
+
+  _subscribe = () => {
+    this._subscription = Gyroscope.addListener((result) => {
+      this.setState({gyroscopeData: result});
+    });
+  }
+
+  _unsubscribe = () => {
+    this._subscription && this._subscription.remove();
+    this._subscription = null;
+  }
 
   renderGallery() {
     return <GalleryScreen onPress={this.toggleView.bind(this)} />;
@@ -306,12 +323,30 @@ export default class CameraScreen extends React.Component {
   }
 
   render() {
+    
+    let { x, y, z } = this.state.gyroscopeData;
+    console.log('x:'+x);
+    console.log('y:'+y);
+    console.log('z:'+z);
+
+    if (round(x) == 0 && round(y) == 0 && round(z) == 0) {
+      this.takePicture.bind(this);
+    }
+
     const cameraScreenContent = this.state.permissionsGranted
       ? this.renderCamera()
       : this.renderNoPermissions();
     const content = this.state.showGallery ? this.renderGallery() : cameraScreenContent;
     return <View style={styles.container}>{content}</View>;
   }
+}
+
+function round(n) {
+  if (!n) {
+    return 0;
+  }
+
+  return Math.floor(n * 100) / 100;
 }
 
 const styles = StyleSheet.create({
