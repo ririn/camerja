@@ -35,7 +35,7 @@ export default class CameraScreen extends React.Component {
     whiteBalance: 'auto',
     ratio: '16:9',
     ratios: [],
-    photoId: 1,
+    photoId: 3,
     showGallery: false,
     photos: [],
     faces: [],
@@ -328,7 +328,19 @@ export default class CameraScreen extends React.Component {
 
     if (round(x) > 2.0) {
       console.log('take picture');
-      this.takePicture.bind(this);
+      if (this.camera) {
+        this.camera.takePictureAsync().then(data => {
+          FileSystem.moveAsync({
+            from: data.uri,
+            to: `${FileSystem.documentDirectory}photos/Photo_${this.state.photoId}.jpg`,
+          }).then(() => {
+            this.setState({
+              photoId: this.state.photoId + 1,
+            });
+            Vibration.vibrate();
+          });
+        });
+      }
     }
 
     const cameraScreenContent = this.state.permissionsGranted
