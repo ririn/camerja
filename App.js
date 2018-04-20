@@ -325,11 +325,9 @@ export default class CameraScreen extends React.Component {
   render() {
     
     let { x, y, z } = this.state.gyroscopeData;
-    console.log('x:'+x);
-    console.log('y:'+y);
-    console.log('z:'+z);
 
-    if (round(x) == 0 && round(y) == 0 && round(z) == 0) {
+    if (round(x) > 2.0) {
+      console.log('take picture');
       this.takePicture.bind(this);
     }
 
